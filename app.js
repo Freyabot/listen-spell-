@@ -70,11 +70,11 @@
   }
   function renderSections(id,interactive){
     const target=$(id);target.replaceChildren();
-    const chapterPapers=papers.filter(p=>p.chapterId===item().chapterId);if(interactive)target.style.gridTemplateColumns=`repeat(${chapterPapers.length},minmax(150px,1fr))`;
+    const chapterPapers=interactive?[paper()]:papers.filter(p=>p.chapterId===item().chapterId);
     chapterPapers.forEach(p=>{const group=data.filter(d=>d.paper===p.id),done=group.filter(d=>state.entries[d.id]?.done||state.entries[d.id]?.completedEver).length;
-      const node=document.createElement(interactive?'button':'div');node.className='section-step'+(item().paper===p.id?' active':'');
-      node.innerHTML=`<span class=section-label>${p.name}<b>${done} / ${group.length}</b></span><span class=section-track role=progressbar aria-label="${p.name}完成进度" aria-valuemin=0 aria-valuemax=${group.length} aria-valuenow=${done}><i style="width:${done/group.length*100}%"></i></span>`;
-      if(interactive){node.setAttribute('aria-label',`切换到 ${p.name}`);node.setAttribute('aria-current',String(item().paper===p.id));node.onclick=()=>switchPaper(p.id);}target.append(node);
+      const node=document.createElement('div');node.className='section-step'+(item().paper===p.id?' active':'');
+      node.innerHTML=`<span class=section-label>${p.name}<b>${done} / ${group.length}${interactive?` · ${Math.round(done/group.length*100)}%`:''}</b></span><span class=section-track role=progressbar aria-label="${p.name}完成进度" aria-valuemin=0 aria-valuemax=${group.length} aria-valuenow=${done}><i style="width:${done/group.length*100}%"></i></span>`;
+      if(interactive)node.setAttribute('aria-current','true');target.append(node);
     });
   }
   function visibleItems() {
