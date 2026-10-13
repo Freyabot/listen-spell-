@@ -26,10 +26,11 @@
     if (!state.entries[id] || state.entries[id].values.length !== n) state.entries[id] = {values:Array(n).fill(''), statuses:Array(n).fill(''), done:false, wrong:false, first:null, revealed:false, replays:0};
     return state.entries[id];
   };
-  const normalize = text => text.normalize('NFKC').toLowerCase().trim().replace(/[’‘]/g,"'").replace(/[.,!?;:]+$/g,'');
+  const normalize = text => text.normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().trim().replace(/[’‘]/g,"'").replace(/[.,!?;:]+$/g,'');
   function matches(value, expected) {
     const v = normalize(value), e = normalize(expected);
     if (v === e) return true;
+    if(tokens().length===1&&item().source?.includes('=')&&item().source.split('=').some(alias=>normalize(alias.replace(/[()]/g,''))===v))return true;
     if (e === 'something') return v === 'sth';
     if (e === 'someone') return ['sb','somebody'].includes(v);
     if (e === 'analyse') return v === 'analyze';
@@ -212,7 +213,7 @@
     $('word-shortcut').hidden=!sessionActive;
     if(!sessionActive&&entry().done){const e=entry();e.completedEver=true;e.done=false;e.values=tokens().map(()=>'');e.statuses=tokens().map(()=>'');}
     const d=item();$('current-number').textContent=String(d.ordinal).padStart(3,'0');$('source-page').textContent=`第 ${d.page} 页`;
-    $('current-total').textContent=`/ ${paper().count}`;$('paper-heading').textContent=String(paper().number).padStart(2,'0');$('crumb-paper').textContent=paper().name;$('footer-paper').textContent=paper().name.toUpperCase();$('paper-select').value=d.paper;$('paper-description').textContent=`${paper().count} 条语料 · ${window.CHAPTERS.find(c=>c.id===d.chapterId)?.title||''}`;renderLibraryPickers();$('source-page').textContent=d.page?`第 ${d.page} 页`:window.CHAPTERS.find(c=>c.id===d.chapterId)?.title||'';document.querySelector('.voice-label').textContent=d.audio?'英文朗读':'设备英文朗读';
+    $('current-total').textContent=`/ ${paper().count}`;$('paper-heading').textContent=paper().name;$('paper-heading').parentElement.firstChild.textContent='';$('crumb-paper').textContent=paper().name;$('footer-paper').textContent=paper().name.toUpperCase();$('paper-select').value=d.paper;$('paper-description').textContent=`${paper().count} 条语料 · ${window.CHAPTERS.find(c=>c.id===d.chapterId)?.title||''}`;renderLibraryPickers();$('source-page').textContent=d.page?`第 ${d.page} 页`:window.CHAPTERS.find(c=>c.id===d.chapterId)?.title||'';document.querySelector('.voice-label').textContent=d.audio?'英文朗读':'设备英文朗读';
     $('save').setAttribute('aria-pressed',String(state.saved.includes(d.id)));$('save').setAttribute('aria-label',state.saved.includes(d.id)?'取消收藏当前词组':'收藏当前词组');
     if(d.audio)speech.src=d.audio;else speech.removeAttribute('src');
     renderWords();feedback('');if(entry().done){$('translation').textContent=d.zh;$('translation').hidden=false;}renderList();stats();

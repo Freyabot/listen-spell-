@@ -1,14 +1,24 @@
 # 听写室
 
-王陆雅思王语料库 Chapter 5，12个Test Paper、1569条语料。
+王陆雅思王语料库：Chapter 3、4、5、11、12，共5586条语料。
 
-无需注册或登录。进度、收藏与错题保存在当前浏览器；不使用后台数据库。支持逐词听写、自动播放与跳转、重听与答案提示、粉白主题、打字及正确/错误音效。
+无需注册或登录，进度、收藏与错题保存在当前浏览器。支持逐词听写、自动播放与跳转、重听与答案提示、当前小节进度和百分比、粉白主题、打字及正确/错误音效。
+
+## 章节
+
+| Chapter | 内容 | 条目 |
+|---|---|---:|
+|3|特别名词 · 9个Test Paper|1135|
+|4|形容词 · 3个Test Paper；副词|346|
+|5|吞音连读混合训练 · 12个Test Paper|1569|
+|11|综合测试 · 4个Section|1742|
+|12|8分词汇 · 名词、形容词、吞音连读|794|
 
 ## 部署
-GitHub仓库 Settings → Pages → Deploy from a branch → main → /(root) → Save。
+仓库Settings → Pages → Deploy from a branch → main → /(root)。
 
 ## 使用
-进入页面后点击开始听写。Space切换下一个单词；Ctrl+Enter播放。重听至少3次或查看答案计入错题。
+选择章节与小节后，点击开始听写。Space切换下一个单词；Ctrl+Enter播放。重听至少3次或查看答案计入错题。
 
 ## 更新词库
-编辑data.js中的词书、章节、Test Paper与语料，保持已有编号稳定；音频放audio目录。
+编辑data.js中的BOOKS、CHAPTERS、PAPERS与PAPER_DATA，保持已有数字编号及uid稳定，新增条目追加到数组末尾。音频放audio目录。
