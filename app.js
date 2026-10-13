@@ -108,7 +108,7 @@
   function renderWords() {
     $('words').replaceChildren();
     tokens().forEach((token,i) => {
-      const wrapper = document.createElement('label'); wrapper.className = 'word'; wrapper.style.width = `${Math.max(62,Math.min(420,token.length*17+22))}px`;wrapper.style.maxWidth='100%';
+      const wrapper = document.createElement('label'); wrapper.className = 'word'; wrapper.style.width = `${Math.max(76,Math.min(460,token.length*19+26))}px`;wrapper.style.maxWidth='100%';
       const input = document.createElement('input'); input.type = 'text'; input.value = entry().values[i]; input.autocomplete = 'off'; input.spellcheck = false; input.autocapitalize = 'off'; input.setAttribute('autocorrect','off'); input.setAttribute('aria-label',`第${i+1}个单词`); input.setAttribute('enterkeyhint','next');
       input.disabled=!sessionActive; wrapper.append(input); $('words').append(wrapper);
       input.setAttribute('aria-describedby','word-shortcut');
@@ -187,7 +187,7 @@
   }
   let ttsPlaying=false;
   function stopAudio() {ttsPlaying=false;window.speechSynthesis?.cancel(); clearTimeout(loopTimer);speech.pause();speech.currentTime=0;setPlaying(false); }
-  function setPlaying(on) { $('audio-visual').classList.toggle('playing',on);$('play-symbol').textContent=on?'Ⅱ':'▶';$('play-label').textContent=on?'暂停朗读':'播放词组';$('play').setAttribute('aria-label',on?'暂停朗读':'播放当前词组'); }
+  function setPlaying(on) { $('audio-visual').classList.toggle('playing',on);$('play-symbol').innerHTML='<svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#ui-'+(on?'pause':'play')+'"/></svg>';$('play-label').textContent=on?'暂停朗读':'播放词组';$('play').setAttribute('aria-label',on?'暂停朗读':'播放当前词组'); }
   function play(options={}) {
     const initial=!sessionActive;
     if(!sessionActive) {sessionActive=true;$('start-session').hidden=true;$('word-shortcut').hidden=false;if(entry().done){const e=entry();e.completedEver=true;e.values=tokens().map(()=>'');e.statuses=tokens().map(()=>'');e.done=false;$('translation').hidden=true;$('translation').textContent='';}renderWords();focusWord(0);}
