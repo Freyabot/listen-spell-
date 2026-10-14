@@ -105,13 +105,28 @@
     input.className = e.statuses[i];
     input.setAttribute('aria-invalid',e.statuses[i] === 'wrong' ? 'true' : 'false');
   }
+  const wordMeasure = document.createElement('canvas').getContext('2d');
+  function fitWord(input, target) {
+    const style = getComputedStyle(input);
+    wordMeasure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const measure = text => wordMeasure.measureText(text).width + Math.max(0,text.length-1)*(parseFloat(style.letterSpacing)||0);
+    const width = Math.ceil(Math.max(56, measure(target), measure(input.value)) + parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + 12);
+    input.parentElement.style.width = `${width}px`;
+  }
+  function fitAllWords() {
+    $('words').querySelectorAll('input').forEach((input,i) => fitWord(input,tokens()[i]));
+  }
+  window.addEventListener('resize',fitAllWords);
+  document.fonts.ready.then(fitAllWords);
   function renderWords() {
     $('words').replaceChildren();
     tokens().forEach((token,i) => {
-      const wrapper = document.createElement('label'); wrapper.className = 'word'; wrapper.style.width = `${Math.max(76,Math.min(460,token.length*19+26))}px`;wrapper.style.maxWidth='100%';
+      const wrapper = document.createElement('label'); wrapper.className = 'word'; wrapper.style.maxWidth='100%';
       const input = document.createElement('input'); input.type = 'text'; input.value = entry().values[i]; input.autocomplete = 'off'; input.spellcheck = false; input.autocapitalize = 'off'; input.setAttribute('autocorrect','off'); input.setAttribute('aria-label',`第${i+1}个单词`); input.setAttribute('enterkeyhint','next');
       input.disabled=!sessionActive; wrapper.append(input); $('words').append(wrapper);
       input.setAttribute('aria-describedby','word-shortcut');
+      fitWord(input,token);
+      input.addEventListener('input',()=>fitWord(input,token));
       let composing=false;
       const currentId=item().id;
       const wordStatus=value=>{
@@ -228,7 +243,7 @@
     if(index<0||index>=data.length)return;
     clearTimeout(nextTimer);persist();state.index=index;
     if(sessionActive && entry().done){const e=entry();e.completedEver=true;e.values=tokens().map(()=>'');e.statuses=tokens().map(()=>'');e.done=false;}
-    $('summary').hidden=true;$('sidebar').classList.remove('open');$('directory-toggle').setAttribute('aria-expanded','false');renderPractice();persist();
+    $('summary').hidden=true;renderPractice();persist();
     $('item-list').querySelector('.active')?.scrollIntoView({block:'nearest',inline:'nearest'});
     if(sessionActive) play({automatic:true});
     focusWord(Math.max(0,entry().statuses.findIndex(s=>s!=='correct')));
@@ -249,12 +264,25 @@
   document.querySelectorAll('[data-sound]').forEach(b=>b.onclick=()=>sound(b.dataset.sound,true));
   document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{reviewMode=false;filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(t=>t.classList.toggle('selected',t===b));renderList();const visible=visibleItems();if(visible.length&&!visible.some(d=>d.id===item().id)) navigate(visible[0].id-1);});
   $('search').oninput=()=>{query=$('search').value.trim();renderList();};
-  $('directory-toggle').onclick=()=>{const open=$('sidebar').classList.toggle('open');$('directory-toggle').setAttribute('aria-expanded',String(open));};
+  function setDirectory(collapsed) {
+    document.querySelector('.layout').classList.toggle('sidebar-collapsed',collapsed);
+    $('sidebar').inert=collapsed;
+    const toggle=$('directory-toggle');
+    toggle.setAttribute('aria-expanded',String(!collapsed));
+    toggle.setAttribute('aria-label',collapsed?'展开学习目录':'收起学习目录');
+    toggle.title=collapsed?'展开学习目录':'收起学习目录';
+    toggle.querySelector('path').setAttribute('d',collapsed?'M9 4v16m4-11 3 3-3 3':'M9 4v16m7-11-3 3 3 3');
+    try { localStorage.setItem('listen-spell-sidebar-collapsed',String(collapsed)); } catch {}
+  }
+  let directoryCollapsed=false;
+  try { directoryCollapsed=localStorage.getItem('listen-spell-sidebar-collapsed')==='true'; } catch {}
+  setDirectory(directoryCollapsed);
+  $('directory-toggle').onclick=()=>setDirectory(!document.querySelector('.layout').classList.contains('sidebar-collapsed'));
   $('summary-open').onclick=openSummary;$('summary-close').onclick=()=>{$('summary').hidden=true;focusWord(0);if(sessionActive){speech.currentTime=0;play();}};
   $('review-wrong').onclick=()=>{const ids=paperItems().filter(d=>state.entries[d.id]?.wrong);if(!ids.length){$('summary').hidden=true;feedback('目前没有错题，继续练习即可。');return;}reviewMode=true;filter='wrong';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('selected',b.dataset.filter==='wrong'));query='';$('search').value='';navigate(ids[0].id-1);};
   $('reset-toggle').onclick=()=>$('reset-confirm').hidden=false;$('reset-cancel').onclick=()=>$('reset-confirm').hidden=true;
   $('reset-confirmed').onclick=async()=>{const button=$('reset-confirmed');button.disabled=true;try{stopAudio();const firstId=paper().firstId;paperItems().forEach(d=>delete state.entries[d.id]);reviewMode=false;filter='all';query='';$('search').value='';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('selected',b.dataset.filter==='all'));$('reset-confirm').hidden=true;navigate(firstId-1);}catch(e){feedback('重置失败，请刷新后重试。');}finally{button.disabled=false;}};
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'){setSettings(false);$('sidebar').classList.remove('open');$('directory-toggle').setAttribute('aria-expanded','false');}if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();play();}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){setSettings(false);}if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();play();}});
   document.addEventListener('click',event=>{if(!$('settings').hidden&&!$('settings').contains(event.target)&&!$('settings-toggle').contains(event.target))setSettings(false);});
   window.addEventListener('beforeunload',persist);
   function renderLibraryPickers(){
