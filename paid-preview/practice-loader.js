@@ -33,6 +33,18 @@
   document.getElementById('paid-loading').hidden=true;document.getElementById('paid-practice').hidden=false;
   await import('./practice-app.js');await import('../guide.js');
   document.getElementById('paid-account').onclick=async()=>{try{await api('release');}finally{location.href='index.html';}};
+  document.getElementById('paid-logout').onclick=async event=>{
+    event.currentTarget.disabled=true;
+    event.currentTarget.textContent='正在退出…';
+    document.dispatchEvent(new Event('practice-guide-open'));
+    const headers={apikey:cfg.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'};
+    await Promise.allSettled([
+      fetch(cfg.url+'/functions/v1/paid-gateway',{method:'POST',headers,body:JSON.stringify({action:'release',payload:{device,lease}}),signal:AbortSignal.timeout(8000)}),
+      fetch(cfg.url+'/auth/v1/logout?scope=local',{method:'POST',headers,body:'{}',signal:AbortSignal.timeout(8000)})
+    ]);
+    localStorage.removeItem(authKey);sessionStorage.removeItem('listen-spell-lease');
+    location.href='index.html';
+  };
   let pending=false;
   const timer=setInterval(async()=>{if(pending)return;pending=true;try{await api('heartbeat');}catch(error){clearInterval(timer);document.dispatchEvent(new Event('practice-guide-open'));document.getElementById('paid-practice').hidden=true;document.getElementById('paid-loading').hidden=false;message.textContent=error.message;}finally{pending=false;}},25000);
   window.addEventListener('pagehide',()=>{fetch(cfg.url+'/functions/v1/paid-gateway',{method:'POST',keepalive:true,headers:{apikey:cfg.key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({action:'release',payload:{device,lease}})}).catch(()=>{});});
