@@ -161,7 +161,8 @@
       input.addEventListener('keydown',event => {
         if (composing || event.isComposing || event.keyCode===229) return;
         if (event.ctrlKey || event.metaKey || event.altKey) return;
-        if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); if (entry().done && event.key === 'Enter') move(1); else submit(i,true); }
+        if (event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); focusWord((i+1)%tokens().length); }
+        else if (event.key === 'Enter') { event.preventDefault(); if (entry().done) move(1); else submit(i,true); }
         else if (event.key === 'Backspace' && !input.value && i>0) { event.preventDefault(); focusWord(i-1); }
       });
       input.addEventListener('paste',event => {
