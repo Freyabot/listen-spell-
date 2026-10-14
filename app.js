@@ -118,6 +118,7 @@
   }
   window.addEventListener('resize',fitAllWords);
   document.fonts.ready.then(fitAllWords);
+  let lastWordFocus=0;
   function renderWords() {
     $('words').replaceChildren();
     tokens().forEach((token,i) => {
@@ -126,6 +127,7 @@
       input.disabled=!sessionActive; wrapper.append(input); $('words').append(wrapper);
       input.setAttribute('aria-describedby','word-shortcut');
       fitWord(input,token);
+      input.addEventListener('focus',()=>{lastWordFocus=i;});
       input.addEventListener('input',()=>fitWord(input,token));
       let composing=false;
       const currentId=item().id;
@@ -162,7 +164,6 @@
         if (composing || event.isComposing || event.keyCode===229) return;
         if (event.ctrlKey || event.metaKey || event.altKey) return;
         if (event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); focusWord((i+1)%tokens().length); }
-        else if (event.key === 'Enter') { event.preventDefault(); if (entry().done) move(1); else submit(i,true); }
         else if (event.key === 'Backspace' && !input.value && i>0) { event.preventDefault(); focusWord(i-1); }
       });
       input.addEventListener('paste',event => {
@@ -196,7 +197,7 @@
       $('translation').textContent=item().zh;$('translation').hidden=false;
       $('word-shortcut').hidden=true;
       if(e.first === null) e.first = !e.revealed;
-      feedback(e.wrong ? '词组已写对，已保留在错题中供你复习。' : '全部正确。按 Enter，继续下一条。','success');
+      feedback(e.wrong ? '词组已写对，已保留在错题中供你复习。' : '全部正确，即将进入下一条。','success');
       clearTimeout(loopTimer);speech.pause();ttsPlaying=false;window.speechSynthesis?.cancel();setPlaying(false);stats();renderList();
       if(sessionActive) {const currentId=item().id;nextTimer=setTimeout(()=>{if(item().id!==currentId||!entry().done)return;const items=visibleItems(),pos=items.findIndex(d=>d.id===currentId);if(pos===items.length-1)openSummary();else move(1);},1800);}
     } else {$('translation').hidden=true;$('translation').textContent='';$('word-shortcut').hidden=!sessionActive;feedback('');stats();}
@@ -251,7 +252,7 @@
   }
   function move(direction) {const items=visibleItems(),pos=items.findIndex(d=>d.id===item().id);const target=items[pos<0?0:pos+direction];if(target) navigate(target.id-1);else if(direction>0&&item().ordinal===paper().count&&entry().done) openSummary();}
   function openSummary() {stopAudio();clearTimeout(nextTimer);stats();$('summary').hidden=false;$('summary-close').focus();}
-  $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('play').onclick=play;
+  $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('play').onclick=()=>{play();focusWord(lastWordFocus);};
   $('start-session').onclick=()=>play({automatic:true});
   $('replay').onclick=()=>{stopAudio();play({replay:true});};
   $('answer').onclick=()=>{if(!sessionActive)return;const showing=$('answer-panel').hidden;$('answer-panel').hidden=!showing;$('answer').setAttribute('aria-pressed',String(showing));if(showing){clearTimeout(nextTimer);const e=entry();e.revealed=true;e.wrong=true;e.first=false;$('answer-text').textContent=item().source||item().en;stats();renderList();persist();}};
@@ -283,7 +284,7 @@
   $('review-wrong').onclick=()=>{const ids=paperItems().filter(d=>state.entries[d.id]?.wrong);if(!ids.length){$('summary').hidden=true;feedback('目前没有错题，继续练习即可。');return;}reviewMode=true;filter='wrong';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('selected',b.dataset.filter==='wrong'));query='';$('search').value='';navigate(ids[0].id-1);};
   $('reset-toggle').onclick=()=>$('reset-confirm').hidden=false;$('reset-cancel').onclick=()=>$('reset-confirm').hidden=true;
   $('reset-confirmed').onclick=async()=>{const button=$('reset-confirmed');button.disabled=true;try{stopAudio();const firstId=paper().firstId;paperItems().forEach(d=>delete state.entries[d.id]);reviewMode=false;filter='all';query='';$('search').value='';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('selected',b.dataset.filter==='all'));$('reset-confirm').hidden=true;navigate(firstId-1);}catch(e){feedback('重置失败，请刷新后重试。');}finally{button.disabled=false;}};
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'){setSettings(false);}if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();play();}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){setSettings(false);}if(event.key==='Enter'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.isComposing&&event.keyCode!==229&&!event.repeat&&($('words').contains(event.target)||event.target===$('play')||event.target===document.body)){event.preventDefault();play();focusWord(lastWordFocus);}});
   document.addEventListener('click',event=>{if(!$('settings').hidden&&!$('settings').contains(event.target)&&!$('settings-toggle').contains(event.target))setSettings(false);});
   window.addEventListener('beforeunload',persist);
   function renderLibraryPickers(){
