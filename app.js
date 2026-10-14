@@ -163,7 +163,7 @@
       input.addEventListener('keydown',event => {
         if (composing || event.isComposing || event.keyCode===229) return;
         if (event.ctrlKey || event.metaKey || event.altKey) return;
-        if (event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); focusWord((i+1)%tokens().length); }
+        if (event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); if(entry().done) move(1); else focusWord((i+1)%tokens().length); }
         else if (event.key === 'Backspace' && !input.value && i>0) { event.preventDefault(); focusWord(i-1); }
       });
       input.addEventListener('paste',event => {
@@ -195,12 +195,12 @@
     if (e.statuses.every(s => s === 'correct')) {
       const wasDone = e.done; e.done=true;e.completedEver=true;
       $('translation').textContent=item().zh;$('translation').hidden=false;
-      $('word-shortcut').hidden=true;
+      $('word-shortcut').hidden=!sessionActive;
+      $('word-shortcut').querySelector('span').textContent='进入下一条词组';
       if(e.first === null) e.first = !e.revealed;
-      feedback(e.wrong ? '词组已写对，已保留在错题中供你复习。' : '全部正确，即将进入下一条。','success');
+      feedback(e.wrong ? '词组已写对，已保留在错题中供你复习。' : '全部正确。按 Space，进入下一条。','success');
       clearTimeout(loopTimer);speech.pause();ttsPlaying=false;window.speechSynthesis?.cancel();setPlaying(false);stats();renderList();
-      if(sessionActive) {const currentId=item().id;nextTimer=setTimeout(()=>{if(item().id!==currentId||!entry().done)return;const items=visibleItems(),pos=items.findIndex(d=>d.id===currentId);if(pos===items.length-1)openSummary();else move(1);},1800);}
-    } else {$('translation').hidden=true;$('translation').textContent='';$('word-shortcut').hidden=!sessionActive;feedback('');stats();}
+    } else {$('translation').hidden=true;$('translation').textContent='';$('word-shortcut').hidden=!sessionActive;$('word-shortcut').querySelector('span').textContent='切换下一个单词';feedback('');stats();}
   }
   let ttsPlaying=false;
   function stopAudio() {ttsPlaying=false;window.speechSynthesis?.cancel(); clearTimeout(loopTimer);speech.pause();speech.currentTime=0;setPlaying(false); }
@@ -228,6 +228,7 @@
   function renderPractice() {
     stopAudio();$('translation').hidden=true;$('translation').textContent='';$('answer-panel').hidden=true;$('answer').setAttribute('aria-pressed','false');
     $('word-shortcut').hidden=!sessionActive;
+    $('word-shortcut').querySelector('span').textContent='切换下一个单词';
     if(!sessionActive&&entry().done){const e=entry();e.completedEver=true;e.done=false;e.values=tokens().map(()=>'');e.statuses=tokens().map(()=>'');}
     const d=item();$('current-number').textContent=String(d.ordinal).padStart(3,'0');$('source-page').textContent=`第 ${d.page} 页`;
     $('current-total').textContent=`/ ${paper().count}`;$('paper-heading').textContent=paper().name;$('paper-heading').parentElement.firstChild.textContent='';$('crumb-paper').textContent=paper().name;$('footer-paper').textContent=paper().name.toUpperCase();$('paper-select').value=d.paper;$('paper-description').textContent=`${paper().count} 条语料 · ${window.CHAPTERS.find(c=>c.id===d.chapterId)?.title||''}`;renderLibraryPickers();$('source-page').textContent=d.page?`第 ${d.page} 页`:window.CHAPTERS.find(c=>c.id===d.chapterId)?.title||'';document.querySelector('.voice-label').textContent=d.audio?'英文朗读':'设备英文朗读';
