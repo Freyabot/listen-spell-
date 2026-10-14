@@ -1,0 +1,11 @@
+.guide-dialog{width:580px;max-width:calc(100% - 48px);max-height:calc(100dvh - 48px);overflow:auto;border:1px solid #e8ccd9;border-radius:20px;padding:30px;color:var(--ink);background:#fff9fb;box-shadow:0 24px 90px #49363f30}
+.guide-dialog::backdrop{background:#49363f66;backdrop-filter:blur(4px)}
+.guide-top{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;letter-spacing:1px}
+.guide-dialog h2{font-size:23px;line-height:1.45;margin:22px 0 14px;font-weight:500}
+.guide-body{font-size:14px;line-height:1.9;margin:0;min-height:108px}
+.guide-visual{padding:24px 16px;border-radius:12px;background:#f9e7ef;color:#9e486e;text-align:center;font-size:16px;line-height:1.7;margin-top:20px}
+.guide-detail{font-size:12px;line-height:1.7;color:var(--muted);margin:12px 0 0;min-height:42px}
+.guide-tip{font-size:13px;color:#9e486e;margin:16px 0 24px}
+.guide-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:20px}
+.guide-navigation{display:flex;gap:10px;align-items:center}.guide-navigation .play-button{min-width:100px}.guide-dots{display:flex;gap:6px}.guide-dots i{width:6px;height:6px;border-radius:50%;background:#e9ccd9}.guide-dots i.active{width:18px;border-radius:4px;background:#b7527c}
+#guide-skip{font-size:12px;white-space:nowrap}.guide-open-icon{width:18px;height:18px}.guide-dialog .quiet{background:#fffdfd}

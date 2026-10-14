@@ -39,7 +39,7 @@
   }
   function persist() {
     try { localStorage.setItem(key,JSON.stringify(state)); } catch { storageOK = false; }
-    if(window.ON_PROGRESS_CHANGED)window.ON_PROGRESS_CHANGED(state);else $('storage-status').textContent=storageOK?'进度保存在此浏览器':'本地存储不可用';
+    if(window.ON_PROGRESS_CHANGED)window.ON_PROGRESS_CHANGED(state);else $('storage-status').textContent=storageOK?'进度保存在此浏览器':'无法保存进度，关闭页面后记录可能丢失';
   }
   const time = seconds => `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
   function sound(name, preview = false) {
@@ -48,7 +48,7 @@
     a.volume = Number(state.settings.volume);
     a.play().catch(() => {});
   }
-  function feedback(text, kind = '') { const show = text.startsWith('音频');$('feedback').textContent=show?text:'';$('feedback').hidden=!show; }
+  function feedback(text, kind = '') { $('feedback').textContent=text;$('feedback').hidden=!text;$('feedback').className=kind; }
   function stats() {
     const group=paperItems(),total=group.length;
     const entries = group.map(d=>state.entries[d.id]).filter(Boolean);
@@ -84,7 +84,7 @@
   function renderList() {
     const list = $('item-list'); list.replaceChildren();
     const items = visibleItems();
-    if (!items.length) { const p = document.createElement('p'); p.className = 'empty-list'; p.textContent = query ? '没有匹配的题目。试试题号。' : filter === 'saved' ? '还没有收藏。点击练习区的星形按钮收藏。' : '重听至少3次或查看答案的词组会出现在这里。'; list.append(p); }
+    if (!items.length) { const p = document.createElement('p'); p.className = 'empty-list'; p.textContent = query ? '没有找到这个题号，试试输入 008。' : filter === 'saved' ? '还没有收藏。点击练习区的星形按钮收藏。' : '重听至少3次或查看答案的词组会出现在这里。'; list.append(p); }
     items.forEach(d => {
       const e = state.entries[d.id];
       const button = document.createElement('button');
@@ -224,7 +224,7 @@
   }
   speech.addEventListener('ended',()=>{setPlaying(false);if(loop && !entry().done) loopTimer=setTimeout(()=>{speech.currentTime=0;play({replay:true});},1200);});
   speech.addEventListener('pause',()=>setPlaying(false));
-  speech.addEventListener('error',()=>feedback('音频加载失败，请刷新页面后重试。','error'));
+  speech.addEventListener('error',()=>feedback('音频加载失败，请检查网络后点击重听。','error'));
   function renderPractice() {
     stopAudio();$('translation').hidden=true;$('translation').textContent='';$('answer-panel').hidden=true;$('answer').setAttribute('aria-pressed','false');
     $('word-shortcut').hidden=!sessionActive;
@@ -287,6 +287,7 @@
   $('reset-confirmed').onclick=async()=>{const button=$('reset-confirmed');button.disabled=true;try{stopAudio();const firstId=paper().firstId;paperItems().forEach(d=>delete state.entries[d.id]);reviewMode=false;filter='all';query='';$('search').value='';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('selected',b.dataset.filter==='all'));$('reset-confirm').hidden=true;navigate(firstId-1);}catch(e){feedback('重置失败，请刷新后重试。');}finally{button.disabled=false;}};
   document.addEventListener('keydown',event=>{if(event.key==='Escape'){setSettings(false);}if(event.key==='Enter'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.isComposing&&event.keyCode!==229&&!event.repeat&&($('words').contains(event.target)||event.target===$('play')||event.target===document.body)){event.preventDefault();play();focusWord(lastWordFocus);}});
   document.addEventListener('click',event=>{if(!$('settings').hidden&&!$('settings').contains(event.target)&&!$('settings-toggle').contains(event.target))setSettings(false);});
+  document.addEventListener('practice-guide-open',stopAudio);
   window.addEventListener('beforeunload',persist);
   function renderLibraryPickers(){
     const bookId=item().bookId,chapterId=item().chapterId;$('book-select').value=bookId;
